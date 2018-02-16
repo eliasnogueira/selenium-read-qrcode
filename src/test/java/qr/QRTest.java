@@ -6,6 +6,7 @@ import com.google.zxing.common.HybridBinarizer;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.imageio.ImageIO;
@@ -17,22 +18,27 @@ public class QRTest {
 
     @Test
     public void readQRCode() throws IOException {
-        /*
-         * setting chromedriver binary to start Google Chrome
-         * @see https://sites.google.com/a/chromium.org/chromedriver/downloads
-         */
         System.setProperty("webdriver.chrome.driver", "/Users/eliasnogueira/Selenium/chromedriver");
         WebDriver driver = new ChromeDriver();
 
-        driver.get("https://eliasnogueira.github.io/selenium-read-qrcode/");
+        try {
+            driver.get("https://eliasnogueira.github.io/selenium-read-qrcode/");
 
-        String qrCodeFile = driver.findElement(By.id("qr")).getAttribute("src");
+            String qrCodeFile = driver.findElement(By.id("qr")).getAttribute("src");
 
-        // show the content of QR Code
-        System.out.println(decodeQRCode(new URL(qrCodeFile)));
+            // show the content of QR Code
+            System.out.println(decodeQRCode(new URL(qrCodeFile)));
 
-        driver.quit();
+        } catch (Throwable throwable) {
+            /*
+             * If a com.google.zxing.NotFoundException your image maybe is too large
+             * or the url was not found
+             */
+            Assert.fail(throwable.toString());
 
+        } finally {
+            driver.quit();
+        }
     }
 
     /**
@@ -41,17 +47,12 @@ public class QRTest {
      * @return the content
      * @throws IOException url not found
      */
-    private static String decodeQRCode(URL qrCodeimage) throws IOException {
+    private static String decodeQRCode(URL qrCodeimage) throws IOException, NotFoundException {
         BufferedImage bufferedImage = ImageIO.read(qrCodeimage);
         LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
 
-        try {
-            Result result = new MultiFormatReader().decode(bitmap);
-            return result.getText();
-        } catch (NotFoundException e) {
-            System.out.println("There is no QR code in the image");
-            return null;
-        }
+        Result result = new MultiFormatReader().decode(bitmap);
+        return result.getText();
     }
 }
