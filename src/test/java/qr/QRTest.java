@@ -63,12 +63,12 @@ public class QRTest {
 
     /**
      * Decode a QR Code image using zxing
-     * @param qrCodeimage the image URL
+     * @param qrCodeImage the image URL
      * @return the content
      * @throws IOException url not found
      */
-    private static String decodeQRCode(URL qrCodeimage) throws IOException, NotFoundException {
-        BufferedImage bufferedImage = ImageIO.read(qrCodeimage);
+    private static String decodeQRCode(URL qrCodeImage) throws IOException, NotFoundException {
+        BufferedImage bufferedImage = ImageIO.read(qrCodeImage);
         LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
 
