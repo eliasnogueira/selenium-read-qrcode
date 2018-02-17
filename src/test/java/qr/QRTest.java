@@ -19,14 +19,17 @@ package qr;
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
+import org.apache.commons.codec.binary.Base64;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 
@@ -34,41 +37,67 @@ import static org.testng.Assert.assertEquals;
 
 public class QRTest {
 
-    @Test
-    public void readQRCode() throws IOException {
+    private WebDriver driver;
+
+
+    @BeforeTest
+    public void setup() {
         // maybe you change this for your local chromedriver
         System.setProperty("webdriver.chrome.driver", "/Users/eliasnogueira/Selenium/chromedriver");
-        WebDriver driver = new ChromeDriver();
+        driver = new ChromeDriver();
 
-        try {
-            driver.get("https://eliasnogueira.github.io/selenium-read-qrcode/");
+        driver.get("https://eliasnogueira.github.io/selenium-read-qrcode/");
+    }
 
-            String qrCodeFile = driver.findElement(By.id("qr")).getAttribute("src");
+    @Test
+    public void readQRCodeFromURL() throws IOException, NotFoundException {
 
-            // get the qr code content and assert the result
-            String qrCodeResult = decodeQRCode(new URL(qrCodeFile));
-            assertEquals(qrCodeResult, "QR Code output text");
+        String qrCodeFile = driver.findElement(By.id("qr")).getAttribute("src");
 
-        } catch (Throwable throwable) {
-            /*
-             * If a com.google.zxing.NotFoundException your image maybe is too large
-             * or the url was not found
-             */
-            Assert.fail(throwable.toString());
+        // get the qr code content and assert the result
+        String qrCodeResult = decodeQRCode(qrCodeFile);
+        assertEquals(qrCodeResult, "Congratulations!");
+    }
 
-        } finally {
-            driver.quit();
-        }
+    @Test
+    public void readQRCodeFromBase64() throws IOException, NotFoundException {
+        String qrCodeFile = driver.findElement(By.id("qr-base64")).getAttribute("src");
+
+        /*
+         * Split the content of src attribute from qr-base64 image to get only the Base64 String
+         * Because the src starts with 'data:image/png;base64,' and following text is the Base64 String
+         */
+        String base64String = qrCodeFile.split(",")[1];
+
+        // get the qr code content and assert the result
+        String qrCodeResult = decodeQRCode(base64String);
+        assertEquals(qrCodeResult, "QR Code Base64 output text");
+    }
+
+    @AfterTest
+    public void tearDown() {
+        driver.quit();
     }
 
     /**
      * Decode a QR Code image using zxing
      * @param qrCodeImage the image URL
      * @return the content
-     * @throws IOException url not found
+     * @throws IOException if the image was not found
      */
-    private static String decodeQRCode(URL qrCodeImage) throws IOException, NotFoundException {
-        BufferedImage bufferedImage = ImageIO.read(qrCodeImage);
+    private static String decodeQRCode(Object qrCodeImage) throws IOException, NotFoundException {
+        BufferedImage bufferedImage;
+
+        // if not (probably it is a URL
+        if (((String) qrCodeImage).contains("http")) {
+            bufferedImage = ImageIO.read((new URL((String)qrCodeImage)));
+
+            // if is a Base64 String
+        } else {
+            byte[] decoded = Base64.decodeBase64((String)qrCodeImage);
+            bufferedImage = ImageIO.read(new ByteArrayInputStream(decoded));
+        }
+
         LuminanceSource source = new BufferedImageLuminanceSource(bufferedImage);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
 
