@@ -70,7 +70,7 @@ class QRCodeTest {
 
         // get the qr code content and assert the result
         String qrCodeResult = decodeQRCode(qrCodeFile);
-        assertThat(qrCodeResult).isEqualTo("Congratulations!");
+        assertThat(qrCodeResult).isEqualTo("c72a0de5-eba3-4bf0-bde2-fc709e71df29");
     }
 
     @Test
@@ -85,7 +85,7 @@ class QRCodeTest {
 
         // get the qr code content and assert the result
         String qrCodeResult = decodeQRCode(base64String);
-        assertThat(qrCodeResult).isEqualTo("QR Code Base64 output text");
+        assertThat(qrCodeResult).isEqualTo("https://twitter.com/eliasnogueira");
     }
 
     @AfterAll
